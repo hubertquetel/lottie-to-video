@@ -3,6 +3,7 @@ FROM node:18-bookworm
 RUN apt-get update && apt-get install -y \
     chromium \
     chromium-driver \
+    ffmpeg \
     fonts-liberation \
     libappindicator3-1 \
     libasound2 \
