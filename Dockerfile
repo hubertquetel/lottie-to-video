@@ -1,5 +1,10 @@
 FROM node:18-alpine
 
+# Variables d'environnement Puppeteer pour désactiver le sandbox
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV CHROMIUM_FLAGS="--no-sandbox --disable-setuid-sandbox"
+
 # Installation des dépendances système
 RUN apk add --no-cache \
     chromium \
@@ -10,10 +15,6 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont \
     ffmpeg
-
-# Variables d'environnement pour Puppeteer
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 WORKDIR /app
 
