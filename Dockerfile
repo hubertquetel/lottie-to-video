@@ -1,6 +1,5 @@
-FROM node:18-buster
+FROM node:18-bookworm
 
-# Installation des dépendances nécessaires pour Chromium et Puppeteer
 RUN apt-get update && apt-get install -y \
     chromium \
     chromium-driver \
@@ -26,7 +25,6 @@ RUN npm ci --only=production
 
 COPY . .
 
-# Variables d'environnement pour Puppeteer / Chromium
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV CHROMIUM_FLAGS="--no-sandbox --disable-setuid-sandbox"
