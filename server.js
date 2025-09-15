@@ -23,13 +23,14 @@ app.post('/convert', upload.single('lottie'), async (req, res) => {
     const inputPath = req.file.path;
     const outputPath = `output/video_${Date.now()}.mp4`;
     
-    // Options configurables
+    // Options configurables avec désactivation du sandbox
     const options = {
       path: inputPath,
       output: outputPath,
       width: parseInt(req.body.width) || 640,
       height: parseInt(req.body.height) || 480,
-      quiet: false
+      quiet: false,
+      launchOptions: { args: ['--no-sandbox', '--disable-setuid-sandbox'] }
     };
 
     // Conversion avec puppeteer-lottie
@@ -70,7 +71,8 @@ app.post('/convert-url', async (req, res) => {
       animationData,
       output: outputPath,
       width: parseInt(width),
-      height: parseInt(height)
+      height: parseInt(height),
+      launchOptions: { args: ['--no-sandbox', '--disable-setuid-sandbox'] }
     };
 
     await renderLottie(options);
