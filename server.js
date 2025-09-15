@@ -24,10 +24,14 @@ app.post('/convert', upload.single('lottie'), async (req, res) => {
     const inputPath = req.file.path;
     const outputPath = `output/video_${Date.now()}.mp4`;
 
-    // Lance Puppeteer manuellement avec les flags no-sandbox
+    // Lance Puppeteer manuellement avec flags pour Docker
     const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage'
+      ],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
       headless: true,
     });
 
@@ -43,7 +47,6 @@ app.post('/convert', upload.single('lottie'), async (req, res) => {
     await renderLottie(options);
     await browser.close();
 
-    // Envoi du fichier vidéo généré
     res.download(outputPath, (err) => {
       if (err) {
         console.error('Erreur lors du téléchargement:', err);
@@ -69,14 +72,16 @@ app.post('/convert-url', async (req, res) => {
 
     const outputPath = `output/video_${Date.now()}.mp4`;
 
-    // Téléchargement du JSON depuis l'URL
     const response = await fetch(jsonUrl);
     const animationData = await response.json();
 
-    // Lance Puppeteer manuellement
     const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage'
+      ],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
       headless: true,
     });
 
@@ -92,7 +97,9 @@ app.post('/convert-url', async (req, res) => {
     await browser.close();
 
     res.download(outputPath, (err) => {
-      if (err) console.error('Erreur lors du téléchargement:', err);
+      if (err) {
+        console.error('Erreur lors du téléchargement:', err);
+      }
       fs.unlink(outputPath).catch(console.error);
     });
 
