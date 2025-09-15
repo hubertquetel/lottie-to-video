@@ -1,5 +1,6 @@
 const express = require('express');
 const multer = require('multer');
+const puppeteer = require('puppeteer');
 const renderLottie = require('puppeteer-lottie');
 const fs = require('fs').promises;
 const path = require('path');
@@ -22,26 +23,31 @@ app.post('/convert', upload.single('lottie'), async (req, res) => {
 
     const inputPath = req.file.path;
     const outputPath = `output/video_${Date.now()}.mp4`;
-    
-    // Options configurables avec désactivation du sandbox
+
+    // Lance Puppeteer manuellement avec les flags no-sandbox
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
+      headless: true,
+    });
+
     const options = {
       path: inputPath,
       output: outputPath,
       width: parseInt(req.body.width) || 640,
       height: parseInt(req.body.height) || 480,
       quiet: false,
-      launchOptions: { args: ['--no-sandbox', '--disable-setuid-sandbox'] }
+      browser
     };
 
-    // Conversion avec puppeteer-lottie
     await renderLottie(options);
+    await browser.close();
 
-    // Retour du fichier vidéo
+    // Envoi du fichier vidéo généré
     res.download(outputPath, (err) => {
       if (err) {
         console.error('Erreur lors du téléchargement:', err);
       }
-      // Nettoyage des fichiers temporaires
       fs.unlink(inputPath).catch(console.error);
       fs.unlink(outputPath).catch(console.error);
     });
@@ -56,29 +62,37 @@ app.post('/convert', upload.single('lottie'), async (req, res) => {
 app.post('/convert-url', async (req, res) => {
   try {
     const { jsonUrl, width = 640, height = 480 } = req.body;
-    
+
     if (!jsonUrl) {
       return res.status(400).json({ error: 'URL JSON manquante' });
     }
 
     const outputPath = `output/video_${Date.now()}.mp4`;
-    
+
     // Téléchargement du JSON depuis l'URL
     const response = await fetch(jsonUrl);
     const animationData = await response.json();
+
+    // Lance Puppeteer manuellement
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser',
+      headless: true,
+    });
 
     const options = {
       animationData,
       output: outputPath,
       width: parseInt(width),
       height: parseInt(height),
-      launchOptions: { args: ['--no-sandbox', '--disable-setuid-sandbox'] }
+      browser
     };
 
     await renderLottie(options);
+    await browser.close();
 
     res.download(outputPath, (err) => {
-      if (err) console.error(err);
+      if (err) console.error('Erreur lors du téléchargement:', err);
       fs.unlink(outputPath).catch(console.error);
     });
 
@@ -91,7 +105,7 @@ app.post('/convert-url', async (req, res) => {
 // Création du dossier output
 fs.mkdir('output', { recursive: true }).catch(console.error);
 
-// Endpoint de santé
+// Endpoint santé
 app.get('/health', (req, res) => res.status(200).send('OK'));
 
 // Endpoint racine
