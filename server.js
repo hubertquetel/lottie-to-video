@@ -89,6 +89,12 @@ app.post('/convert-url', async (req, res) => {
 // Création du dossier output
 fs.mkdir('output', { recursive: true }).catch(console.error);
 
+// Endpoint de santé
+app.get('/health', (req, res) => res.status(200).send('OK'));
+
+// Endpoint racine
+app.get('/', (req, res) => res.status(200).send('API Lottie to Video is running'));
+
 app.listen(port, () => {
   console.log(`API Lottie vers Vidéo sur http://localhost:${port}`);
 });
